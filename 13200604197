@@ -1,0 +1,50 @@
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/tomoneko2222/roblox-script/refs/heads/main/orion')))()
+
+local Window = OrionLib:MakeWindow({Name = "自治区用script", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
+
+local mainTab = Window:MakeTab({
+    Name = "main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+mainTab:AddButton({
+    Name = "shopを開く(警察でも可)",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local shopGui = player:WaitForChild("PlayerGui"):WaitForChild("ShopGuis"):WaitForChild("WeaponShopGui")
+        shopGui.Visible = true
+    end
+})
+
+mainTab:AddLabel("弾数変更は一発撃って、バックパックに戻してから変更してください。")
+
+local ammoInput = mainTab:AddTextbox({
+    Name = "弾数",
+    Default = "",
+    TextDisappear = false,
+    Callback = function(value)
+        ammoValue = tonumber(value)
+    end
+})
+
+mainTab:AddButton({
+    Name = "弾数を変更",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local backpack = player:WaitForChild("Backpack")
+        for _, tool in ipairs(backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                local repValues = tool:FindFirstChild("RepValues")
+                if repValues then
+                    local mag = repValues:FindFirstChild("Mag")
+                    local storedAmmo = repValues:FindFirstChild("StoredAmmo")
+                    if mag and mag:IsA("IntValue") and storedAmmo and storedAmmo:IsA("IntValue") then
+                        mag.Value = ammoValue
+                        storedAmmo.Value = ammoValue
+                    end
+                end
+            end
+        end
+    end
+})
