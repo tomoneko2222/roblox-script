@@ -8,6 +8,20 @@ local mainTab = Window:MakeTab({
     PremiumOnly = false
 })
 
+local function autoHoldProximityPrompt(prompt)
+    prompt.HoldDuration = 0
+
+    local function holdPrompt()
+        while true do
+            prompt:InputHoldBegin()
+            task.wait()
+            prompt:InputHoldEnd()
+        end
+    end
+
+    task.spawn(holdPrompt)
+end
+
 mainTab:AddButton({
     Name = "shopを開く(警察でも可)",
     Callback = function()
@@ -111,5 +125,269 @@ mainTab:AddToggle({
                 end
             end
         end
+    end
+})
+
+mainTab:AddButton({
+    Name = "密売人をすべて逮捕する【警察限定】",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local originalPosition = player.Character.HumanoidRootPart.Position
+        local smugglersFolder = workspace:FindFirstChild("Smugglers")
+        if smugglersFolder then
+            for _, smuggler in ipairs(smugglersFolder:GetChildren()) do
+                if smuggler:IsA("Model") and smuggler.Name == "Smuggler" then
+                    local prompt = smuggler:FindFirstChild("SellingWeapons", true)
+                    if prompt and prompt:IsA("ProximityPrompt") then
+                        player.Character:SetPrimaryPartCFrame(smuggler.PrimaryPart.CFrame)
+                        autoHoldProximityPrompt(prompt)
+                        wait(1)
+                    end
+                end
+            end
+        end
+        player.Character:SetPrimaryPartCFrame(CFrame.new(originalPosition))
+    end
+})
+
+local hitboxEnabled = false
+local hitboxSize = 5
+
+local function updateHitboxes()
+    if hitboxEnabled then
+        for _, v in next, game:GetService('Players'):GetPlayers() do
+            if v.Name ~= game:GetService('Players').LocalPlayer.Name then
+                pcall(function()
+                    v.Character.Head.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
+                    v.Character.Head.Transparency = 0.4
+                    v.Character.Head.BrickColor = BrickColor.new("Red")
+                    v.Character.Head.Material = "Neon"
+                    v.Character.Head.CanCollide = false
+                    v.Character.Head.Massless = true
+                end)
+            end
+        end
+    end
+end
+
+mainTab:AddTextbox({
+    Name = "Hitbox Size",
+    Default = tostring(hitboxSize),
+    TextDisappear = false,
+    Callback = function(Value)
+        local size = tonumber(Value)
+        if size then
+            hitboxSize = size
+            if hitboxEnabled then
+                updateHitboxes()
+            end
+        end
+    end
+})
+
+mainTab:AddToggle({
+    Name = "Hitbox",
+    Default = false,
+    Callback = function(Value)
+        hitboxEnabled = Value
+        if Value then
+            game:GetService('RunService').RenderStepped:Connect(updateHitboxes)
+        end
+    end
+})
+
+local bringTab = Window:MakeTab({
+    Name = "bring",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local playerBringToggleEnabled = false
+local playerBringLoop = nil
+local excludeFriends = false
+
+local function playerBringScript()
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+
+    local DISTANCE_FROM_PLAYER = 20
+
+    local function getPlayerCharacter(player)
+        return player and player.Character
+    end
+
+    local function updatePlayerPosition(player)
+        local localPlayer = Players.LocalPlayer
+        if localPlayer == player then return end
+        if excludeFriends and localPlayer:IsFriendsWith(player.UserId) then return end
+
+        local localCharacter = getPlayerCharacter(localPlayer)
+        local playerCharacter = getPlayerCharacter(player)
+
+        if localCharacter and localCharacter:FindFirstChild("HumanoidRootPart") and playerCharacter and playerCharacter:FindFirstChild("HumanoidRootPart") then
+            local forwardVector = localCharacter.HumanoidRootPart.CFrame.LookVector
+            local targetPosition = localCharacter.HumanoidRootPart.Position + forwardVector * DISTANCE_FROM_PLAYER
+
+            playerCharacter.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
+        end
+    end
+
+    playerBringLoop = coroutine.create(function()
+        while playerBringToggleEnabled do
+            for _, player in ipairs(Players:GetPlayers()) do
+                updatePlayerPosition(player)
+            end
+            wait(0.1)
+        end
+    end)
+    coroutine.resume(playerBringLoop)
+end
+
+bringTab:AddToggle({
+    Name = "Player Bring (all)",
+    Default = false,
+    Callback = function(Value)
+        playerBringToggleEnabled = Value
+        if Value then
+            playerBringScript()
+        else
+            if playerBringLoop and coroutine.status(playerBringLoop) == "suspended" then
+                coroutine.close(playerBringLoop)
+                playerBringLoop = nil
+            end
+        end
+    end
+})
+
+local playerBringToggleEnabled_tc_tdm_zs = false
+local playerBringLoop_tc_tdm_zs = nil
+
+local function playerBringScript_tc_tdm_zs()
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+
+    local DISTANCE_FROM_PLAYER = 20
+
+    local function getPlayerCharacter(player)
+        return player and player.Character
+    end
+
+    local function updatePlayerPosition(player)
+        local localPlayer = Players.LocalPlayer
+        if localPlayer == player then return end
+        if excludeFriends and localPlayer:IsFriendsWith(player.UserId) then return end
+
+        local localCharacter = getPlayerCharacter(localPlayer)
+        local playerCharacter = getPlayerCharacter(player)
+
+        if localCharacter and localCharacter:FindFirstChild("HumanoidRootPart") and playerCharacter and playerCharacter:FindFirstChild("HumanoidRootPart") then
+            local forwardVector = localCharacter.HumanoidRootPart.CFrame.LookVector
+            local targetPosition = localCharacter.HumanoidRootPart.Position + forwardVector * DISTANCE_FROM_PLAYER
+
+            if localPlayer.Team ~= player.Team then
+                playerCharacter.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
+            end
+        end
+    end
+
+    playerBringLoop_tc_tdm_zs = coroutine.create(function()
+        while playerBringToggleEnabled_tc_tdm_zs do
+            for _, player in ipairs(Players:GetPlayers()) do
+                updatePlayerPosition(player)
+            end
+            wait(0.1)
+        end
+    end)
+    coroutine.resume(playerBringLoop_tc_tdm_zs)
+end
+
+bringTab:AddToggle({
+    Name = "Player Bring (自分がいるチーム以外)",
+    Default = false,
+    Callback = function(Value)
+        playerBringToggleEnabled_tc_tdm_zs = Value
+        if Value then
+            playerBringScript_tc_tdm_zs()
+        else
+            if playerBringLoop_tc_tdm_zs and coroutine.status(playerBringLoop_tc_tdm_zs) == "suspended" then
+                coroutine.close(playerBringLoop_tc_tdm_zs)
+                playerBringLoop_tc_tdm_zs = nil
+            end
+        end
+    end
+})
+
+local selectedPlayer = nil
+local onePlayerBringEnabled = false
+local onePlayerBringLoop = nil
+
+local function updatePlayerList()
+    local playerList = {"None"}
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        if player ~= game.Players.LocalPlayer then
+            table.insert(playerList, player.Name)
+        end
+    end
+    return playerList
+end
+
+local playerDropdown = bringTab:AddDropdown({
+    Name = "1player bring",
+    Default = "None",
+    Options = updatePlayerList(),
+    Callback = function(Value)
+        selectedPlayer = Value ~= "None" and game.Players:FindFirstChild(Value) or nil
+    end
+})
+
+local function updateOnePlayerPosition()
+    if not selectedPlayer then return end
+    if excludeFriends and game.Players.LocalPlayer:IsFriendsWith(selectedPlayer.UserId) then return end
+
+    local localPlayer = game.Players.LocalPlayer
+    local localCharacter = localPlayer.Character
+    local playerCharacter = selectedPlayer.Character
+
+    if localCharacter and localCharacter:FindFirstChild("HumanoidRootPart") and playerCharacter and playerCharacter:FindFirstChild("HumanoidRootPart") then
+        local forwardVector = localCharacter.HumanoidRootPart.CFrame.LookVector
+        local targetPosition = localCharacter.HumanoidRootPart.Position + forwardVector * 20
+
+        playerCharacter.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
+    end
+end
+
+bringTab:AddToggle({
+    Name = "1player bring",
+    Default = false,
+    Callback = function(Value)
+        onePlayerBringEnabled = Value
+        if Value then
+            onePlayerBringLoop = coroutine.create(function()
+                while onePlayerBringEnabled do
+                    updateOnePlayerPosition()
+                    wait(0.1)
+                end
+            end)
+            coroutine.resume(onePlayerBringLoop)
+        else
+            if onePlayerBringLoop and coroutine.status(onePlayerBringLoop) == "suspended" then
+                coroutine.close(onePlayerBringLoop)
+                onePlayerBringLoop = nil
+            end
+        end
+    end
+})
+
+spawn(function()
+    while wait(5) do
+        playerDropdown:Refresh(updatePlayerList(), true)
+    end
+end)
+
+bringTab:AddToggle({
+    Name = "Exclude Friends",
+    Default = false,
+    Callback = function(Value)
+        excludeFriends = Value
     end
 })
