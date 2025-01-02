@@ -48,3 +48,40 @@ mainTab:AddButton({
         end
     end
 })
+
+local autoCoinEnabled = false
+
+mainTab:AddToggle({
+    Name = "auto coin",
+    Default = false,
+    Callback = function(value)
+        autoCoinEnabled = value
+        if autoCoinEnabled then
+            while autoCoinEnabled do
+                for _, coin in ipairs(workspace:GetChildren()) do
+                    if coin:IsA("Part") and coin.Name == "Coin" then
+                        local clickDetector = coin:FindFirstChild("ClickDetector")
+                        if clickDetector then
+                            fireclickdetector(clickDetector)
+                        end
+                    end
+                end
+                for _, model in ipairs(workspace:GetChildren()) do
+                    if model:IsA("Model") and model.Name == "Model" then
+                        local dagCoinMachine = model:FindFirstChild("DagCoinProducingMachine")
+                        if dagCoinMachine and dagCoinMachine:IsA("Model") then
+                            local wedge = dagCoinMachine:FindFirstChild("Wedge")
+                            if wedge and wedge:IsA("WedgePart") then
+                                local proximityPrompt = wedge:FindFirstChild("ProximityPrompt")
+                                if proximityPrompt then
+                                    fireproximityprompt(proximityPrompt)
+                                end
+                            end
+                        end
+                    end
+                end
+                wait(1)
+            end
+        end
+    end
+})
