@@ -85,3 +85,31 @@ mainTab:AddToggle({
         end
     end
 })
+
+local smugglerEspEnabled = false
+
+mainTab:AddToggle({
+    Name = "密売人esp",
+    Default = false,
+    Callback = function(value)
+        smugglerEspEnabled = value
+        local smugglersFolder = workspace:FindFirstChild("Smugglers")
+        if smugglersFolder then
+            for _, smuggler in ipairs(smugglersFolder:GetChildren()) do
+                if smuggler:IsA("Model") and smuggler.Name == "Smuggler" then
+                    if smugglerEspEnabled then
+                        local highlight = Instance.new("Highlight")
+                        highlight.Adornee = smuggler
+                        highlight.FillColor = Color3.new(1, 1, 0) -- 黄色
+                        highlight.Parent = smuggler
+                    else
+                        local highlight = smuggler:FindFirstChildOfClass("Highlight")
+                        if highlight then
+                            highlight:Destroy()
+                        end
+                    end
+                end
+            end
+        end
+    end
+})
