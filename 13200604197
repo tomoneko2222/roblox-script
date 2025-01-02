@@ -66,7 +66,7 @@ mainTab:AddButton({
 local autoCoinEnabled = false
 
 mainTab:AddToggle({
-    Name = "auto coin",
+    Name = "auto coin(dag coin工場でオンにしてください)",
     Default = false,
     Callback = function(value)
         autoCoinEnabled = value
@@ -141,7 +141,7 @@ mainTab:AddButton({
                     if prompt and prompt:IsA("ProximityPrompt") then
                         player.Character:SetPrimaryPartCFrame(smuggler.PrimaryPart.CFrame)
                         autoHoldProximityPrompt(prompt)
-                        wait(1)
+                        wait(0.5)
                     end
                 end
             end
