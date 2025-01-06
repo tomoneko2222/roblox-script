@@ -1,0 +1,1264 @@
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/tomoneko2222/roblox-script/refs/heads/main/orion')))()
+
+local Window = OrionLib:MakeWindow({Name = "アイテムアスリート用script", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
+
+local mainTab = Window:MakeTab({
+    Name = "main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local autoAttackEnabled = false
+local autoAttackLoop
+
+mainTab:AddToggle({
+    Name = "Auto Attack",
+    Default = false,
+    Callback = function(Value)
+        autoAttackEnabled = Value
+        if Value then
+            local player = game.Players.LocalPlayer
+            autoAttackLoop = coroutine.create(function()
+                while autoAttackEnabled do
+                    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChildOfClass("Tool") and player.Character:FindFirstChildOfClass("Tool"):FindFirstChild("Handle") then
+                        local tool = player.Character:FindFirstChildOfClass("Tool")
+                        pcall(function()
+                            tool:Activate()
+                        end)
+                    end
+                    wait(0.01)
+                end
+            end)
+            coroutine.resume(autoAttackLoop)
+        else
+            if autoAttackLoop and coroutine.status(autoAttackLoop) == "suspended" then
+                coroutine.close(autoAttackLoop)
+            end
+        end
+    end
+})
+
+local playerBringToggleEnabled = false
+local playerBringLoop = nil
+local excludeFriends = false
+
+local function playerBringScript()
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+
+    local DISTANCE_FROM_PLAYER = 20
+
+    local function getPlayerCharacter(player)
+        return player and player.Character
+    end
+
+    local function updatePlayerPosition(player)
+        local localPlayer = Players.LocalPlayer
+        if localPlayer == player then return end
+        if excludeFriends and localPlayer:IsFriendsWith(player.UserId) then return end
+
+        local localCharacter = getPlayerCharacter(localPlayer)
+        local playerCharacter = getPlayerCharacter(player)
+
+        if localCharacter and localCharacter:FindFirstChild("HumanoidRootPart") and playerCharacter and playerCharacter:FindFirstChild("HumanoidRootPart") then
+            local forwardVector = localCharacter.HumanoidRootPart.CFrame.LookVector
+            local targetPosition = localCharacter.HumanoidRootPart.Position + forwardVector * DISTANCE_FROM_PLAYER
+
+            playerCharacter.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
+        end
+    end
+
+    playerBringLoop = coroutine.create(function()
+        while playerBringToggleEnabled do
+            for _, player in ipairs(Players:GetPlayers()) do
+                updatePlayerPosition(player)
+            end
+            wait(0.1)
+        end
+    end)
+    coroutine.resume(playerBringLoop)
+end
+
+mainTab:AddToggle({
+    Name = "Player Bring (FFA)",
+    Default = false,
+    Callback = function(Value)
+        playerBringToggleEnabled = Value
+        if Value then
+            playerBringScript()
+        else
+            if playerBringLoop and coroutine.status(playerBringLoop) == "suspended" then
+                coroutine.close(playerBringLoop)
+                playerBringLoop = nil
+            end
+        end
+    end
+})
+
+local playerBringToggleEnabled_tc_tdm_zs = false
+local playerBringLoop_tc_tdm_zs = nil
+
+local function playerBringScript_tc_tdm_zs()
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+
+    local DISTANCE_FROM_PLAYER = 20
+
+    local function getPlayerCharacter(player)
+        return player and player.Character
+    end
+
+    local function updatePlayerPosition(player)
+        local localPlayer = Players.LocalPlayer
+        if localPlayer == player then return end
+        if excludeFriends and localPlayer:IsFriendsWith(player.UserId) then return end
+
+        local localCharacter = getPlayerCharacter(localPlayer)
+        local playerCharacter = getPlayerCharacter(player)
+
+        if localCharacter and localCharacter:FindFirstChild("HumanoidRootPart") and playerCharacter and playerCharacter:FindFirstChild("HumanoidRootPart") then
+            local forwardVector = localCharacter.HumanoidRootPart.CFrame.LookVector
+            local targetPosition = localCharacter.HumanoidRootPart.Position + forwardVector * DISTANCE_FROM_PLAYER
+
+            if localPlayer.Team ~= player.Team then
+                playerCharacter.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
+            end
+        end
+    end
+
+    playerBringLoop_tc_tdm_zs = coroutine.create(function()
+        while playerBringToggleEnabled_tc_tdm_zs do
+            for _, player in ipairs(Players:GetPlayers()) do
+                updatePlayerPosition(player)
+            end
+            wait(0.1)
+        end
+    end)
+    coroutine.resume(playerBringLoop_tc_tdm_zs)
+end
+
+mainTab:AddToggle({
+    Name = "Player Bring (tc tdm zs...)",
+    Default = false,
+    Callback = function(Value)
+        playerBringToggleEnabled_tc_tdm_zs = Value
+        if Value then
+            playerBringScript_tc_tdm_zs()
+        else
+            if playerBringLoop_tc_tdm_zs and coroutine.status(playerBringLoop_tc_tdm_zs) == "suspended" then
+                coroutine.close(playerBringLoop_tc_tdm_zs)
+                playerBringLoop_tc_tdm_zs = nil
+            end
+        end
+    end
+})
+
+-- New functionality: 1player bring
+local selectedPlayer = nil
+local onePlayerBringEnabled = false
+local onePlayerBringLoop = nil
+
+local function updatePlayerList()
+    local playerList = {"None"}
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        if player ~= game.Players.LocalPlayer then
+            table.insert(playerList, player.Name)
+        end
+    end
+    return playerList
+end
+
+local playerDropdown = mainTab:AddDropdown({
+    Name = "1player bring",
+    Default = "None",
+    Options = updatePlayerList(),
+    Callback = function(Value)
+        selectedPlayer = Value ~= "None" and game.Players:FindFirstChild(Value) or nil
+    end
+})
+
+local function updateOnePlayerPosition()
+    if not selectedPlayer then return end
+    if excludeFriends and game.Players.LocalPlayer:IsFriendsWith(selectedPlayer.UserId) then return end
+
+    local localPlayer = game.Players.LocalPlayer
+    local localCharacter = localPlayer.Character
+    local playerCharacter = selectedPlayer.Character
+
+    if localCharacter and localCharacter:FindFirstChild("HumanoidRootPart") and playerCharacter and playerCharacter:FindFirstChild("HumanoidRootPart") then
+        local forwardVector = localCharacter.HumanoidRootPart.CFrame.LookVector
+        local targetPosition = localCharacter.HumanoidRootPart.Position + forwardVector * 20
+
+        playerCharacter.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
+    end
+end
+
+mainTab:AddToggle({
+    Name = "1player bring",
+    Default = false,
+    Callback = function(Value)
+        onePlayerBringEnabled = Value
+        if Value then
+            onePlayerBringLoop = coroutine.create(function()
+                while onePlayerBringEnabled do
+                    updateOnePlayerPosition()
+                    wait(0.1)
+                end
+            end)
+            coroutine.resume(onePlayerBringLoop)
+        else
+            if onePlayerBringLoop and coroutine.status(onePlayerBringLoop) == "suspended" then
+                coroutine.close(onePlayerBringLoop)
+                onePlayerBringLoop = nil
+            end
+        end
+    end
+})
+
+-- Update player list every 5 seconds
+spawn(function()
+    while wait(5) do
+        playerDropdown:Refresh(updatePlayerList(), true)
+    end
+end)
+
+-- New toggle for excluding friends
+mainTab:AddToggle({
+    Name = "Exclude Friends",
+    Default = false,
+    Callback = function(Value)
+        excludeFriends = Value
+    end
+})
+
+local murdererEspEnabled = false
+local murdererEspLoop
+
+local function CreateHighlight(player)
+    if player.Character and not player.Character:FindFirstChild("Highlight") then
+        local highlight = Instance.new("Highlight")
+        highlight.FillColor = Color3.fromRGB(255, 0, 0)
+        highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+        highlight.Parent = player.Character
+    end
+end
+
+local function RemoveHighlight(player)
+    if player.Character and player.Character:FindFirstChild("Highlight") then
+        player.Character.Highlight:Destroy()
+    end
+end
+
+local function CheckForMurderer()
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player ~= game.Players.LocalPlayer then
+            local hasMurdererTool = false
+            
+            if player.Character then
+                for _, item in pairs(player.Character:GetChildren()) do
+                    if item:IsA("Tool") and string.sub(item.Name, 1, 3) == "mu_" then
+                        hasMurdererTool = true
+                        break
+                    end
+                end
+            end
+            
+            if player:FindFirstChild("Backpack") then
+                for _, item in pairs(player.Backpack:GetChildren()) do
+                    if item:IsA("Tool") and string.sub(item.Name, 1, 3) == "mu_" then
+                        hasMurdererTool = true
+                        break
+                    end
+                end
+            end
+            
+            if hasMurdererTool then
+                CreateHighlight(player)
+            else
+                RemoveHighlight(player)
+            end
+        end
+    end
+end
+
+mainTab:AddToggle({
+    Name = "Murderer ESP (mu)",
+    Default = false,
+    Callback = function(Value)
+        murdererEspEnabled = Value
+        if Value then
+            murdererEspLoop = game:GetService("RunService").Heartbeat:Connect(function()
+                CheckForMurderer()
+            end)
+        else
+            if murdererEspLoop then
+                murdererEspLoop:Disconnect()
+            end
+            for _, player in pairs(game.Players:GetPlayers()) do
+                RemoveHighlight(player)
+            end
+        end
+    end
+})
+
+local eventTab = Window:MakeTab({
+    Name = "event",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+eventTab:AddButton({
+    Name = "プレゼントを自動で取る",
+    Callback = function()
+        local workspace = game:GetService("Workspace")
+        local debrisFolder = workspace:WaitForChild("Debris")
+
+        local function autoHoldProximityPrompt(prompt)
+            prompt.HoldDuration = 0
+
+            local function holdPrompt()
+                while true do
+                    prompt:InputHoldBegin()
+                    task.wait()
+                    prompt:InputHoldEnd()
+                end
+            end
+            
+            task.spawn(holdPrompt)
+        end
+
+        local function setupAutoHoldForMeshPart(meshPart)
+            for _, child in ipairs(meshPart:GetChildren()) do
+                if child:IsA("ProximityPrompt") then
+                    autoHoldProximityPrompt(child)
+                end
+            end
+            
+            meshPart.ChildAdded:Connect(function(newChild)
+                if newChild:IsA("ProximityPrompt") then
+                    autoHoldProximityPrompt(newChild)
+                end
+            end)
+        end
+
+        local function processDebrisFolder()
+            for _, item in ipairs(debrisFolder:GetChildren()) do
+                if item:IsA("MeshPart") then
+                    setupAutoHoldForMeshPart(item)
+                end
+            end
+        end
+
+        processDebrisFolder()
+
+        debrisFolder.ChildAdded:Connect(function(child)
+            if child:IsA("MeshPart") then
+                setupAutoHoldForMeshPart(child)
+            end
+        end)
+    end
+})
+
+local PlayerTab = Window:MakeTab({
+    Name = "player",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local walkSpeedEnabled = false
+local walkSpeedHeartbeatConnection = nil
+local currentSpeed = 16
+
+local infiniteJumpEnabled = false
+local infiniteJumpConnection = nil
+
+local hitboxEnabled = false
+local hitboxSize = 5
+
+local function updateWalkSpeed()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if character and walkSpeedEnabled then
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = currentSpeed
+        end
+    end
+end
+
+local function toggleWalkSpeed(enabled)
+    walkSpeedEnabled = enabled
+    if enabled then
+        if walkSpeedHeartbeatConnection then
+            walkSpeedHeartbeatConnection:Disconnect()
+        end
+        walkSpeedHeartbeatConnection = game:GetService("RunService").Heartbeat:Connect(updateWalkSpeed)
+        updateWalkSpeed()
+    else
+        if walkSpeedHeartbeatConnection then
+            walkSpeedHeartbeatConnection:Disconnect()
+            walkSpeedHeartbeatConnection = nil
+        end
+    end
+end
+
+local function toggleInfiniteJump(enabled)
+    infiniteJumpEnabled = enabled
+    if enabled then
+        if infiniteJumpConnection then
+            infiniteJumpConnection:Disconnect()
+        end
+        infiniteJumpConnection = game:GetService("UserInputService").JumpRequest:Connect(function()
+            local player = game.Players.LocalPlayer
+            if player.Character then
+                player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
+    else
+        if infiniteJumpConnection then
+            infiniteJumpConnection:Disconnect()
+            infiniteJumpConnection = nil
+        end
+    end
+end
+
+local function updateHitboxes()
+    if hitboxEnabled then
+        for _, v in next, game:GetService('Players'):GetPlayers() do
+            if v.Name ~= game:GetService('Players').LocalPlayer.Name then
+                pcall(function()
+                    v.Character.Head.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
+                    v.Character.Head.Transparency = 0.4
+                    v.Character.Head.BrickColor = BrickColor.new("Red")
+                    v.Character.Head.Material = "Neon"
+                    v.Character.Head.CanCollide = false
+                    v.Character.Head.Massless = true
+                end)
+            end
+        end
+    end
+end
+
+PlayerTab:AddTextbox({
+    Name = "WalkSpeed",
+    Default = tostring(currentSpeed),
+    TextDisappear = false,
+    Callback = function(Value)
+        local speed = tonumber(Value)
+        if speed then
+            currentSpeed = speed
+            if walkSpeedEnabled then
+                updateWalkSpeed()
+            end
+        end
+    end
+})
+
+PlayerTab:AddToggle({
+    Name = "Toggle WalkSpeed",
+    Default = false,
+    Callback = function(Value)
+        toggleWalkSpeed(Value)
+    end
+})
+
+PlayerTab:AddToggle({
+    Name = "Infinite Jump",
+    Default = false,
+    Callback = function(Value)
+        toggleInfiniteJump(Value)
+    end
+})
+
+PlayerTab:AddTextbox({
+    Name = "Hitbox Size (β)",
+    Default = tostring(hitboxSize),
+    TextDisappear = false,
+    Callback = function(Value)
+        local size = tonumber(Value)
+        if size then
+            hitboxSize = size
+            if hitboxEnabled then
+                updateHitboxes()
+            end
+        end
+    end
+})
+
+PlayerTab:AddToggle({
+    Name = "Hitbox (β)",
+    Default = false,
+    Callback = function(Value)
+        hitboxEnabled = Value
+        if Value then
+            game:GetService('RunService').RenderStepped:Connect(updateHitboxes)
+        end
+    end
+})
+
+local function removeFog()
+    local Lighting = game:GetService("Lighting")
+    Lighting.FogEnd = 100000
+    for i,v in pairs(Lighting:GetDescendants()) do
+        if v:IsA("Atmosphere") then
+            v:Destroy()
+        end
+    end
+end
+
+-- 新しいボタンを追加
+PlayerTab:AddButton({
+    Name = "No Fog",
+    Callback = function()
+        removeFog()
+        OrionLib:MakeNotification({
+            Name = "Fog Removed",
+            Content = "霧が削除されました",
+            Image = "rbxassetid://4483345998",
+            Time = 5
+        })
+    end
+})
+
+local Tab1 = Window:MakeTab({
+    Name = "npc",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local zombieToggleEnabled = false
+local zombieLoop = nil
+
+local function zombieScript()
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+
+    local DISTANCE_FROM_PLAYER = 20
+
+    local function getPlayerCharacter()
+        local player = Players.LocalPlayer
+        return player and player.Character
+    end
+
+    local function updateHeadPosition(head, character)
+        if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+        
+        local rootPart = character.HumanoidRootPart
+        local forwardVector = rootPart.CFrame.LookVector
+        local targetPosition = rootPart.Position + forwardVector * DISTANCE_FROM_PLAYER
+        
+        head.CFrame = CFrame.new(targetPosition, rootPart.Position)
+    end
+
+    local function processNPC(npc)
+        if not npc:IsA("Model") then return end
+        
+        local head = npc:FindFirstChild("Head")
+        if head and head:IsA("BasePart") then
+            head.Size = Vector3.new(6, 6, 6)
+            head.Transparency = 0.4
+            head.CanCollide = false
+            
+            local character = getPlayerCharacter()
+            if character then
+                updateHeadPosition(head, character)
+            end
+            
+            print("Adjusted head of " .. npc:GetFullName())
+        end
+    end
+
+    local function processExistingNPCs()
+        local NPCs = workspace:FindFirstChild("NPCs")
+        if not NPCs then
+            NPCs = Instance.new("Folder")
+            NPCs.Name = "NPCs"
+            NPCs.Parent = workspace
+            print("Created NPCs folder in workspace")
+        end
+        
+        for _, npc in ipairs(NPCs:GetChildren()) do
+            processNPC(npc)
+        end
+    end
+
+    local heartbeatConnection
+    heartbeatConnection = RunService.Heartbeat:Connect(function()
+        if not zombieToggleEnabled then
+            heartbeatConnection:Disconnect()
+            return
+        end
+
+        local character = getPlayerCharacter()
+        if not character then return end
+        
+        local NPCs = workspace:FindFirstChild("NPCs")
+        if not NPCs then return end
+        
+        for _, npc in ipairs(NPCs:GetChildren()) do
+            local head = npc:FindFirstChild("Head")
+            if head and head:IsA("BasePart") then
+                updateHeadPosition(head, character)
+            end
+        end
+    end)
+
+    zombieLoop = coroutine.create(function()
+        while zombieToggleEnabled do
+            processExistingNPCs()
+            wait(0.5)
+        end
+    end)
+    coroutine.resume(zombieLoop)
+end
+
+Tab1:AddToggle({
+    Name = "雑魚npc用",
+    Default = false,
+    Callback = function(Value)
+        zombieToggleEnabled = Value
+        if Value then
+            zombieScript()
+        else
+            if zombieLoop then
+                coroutine.close(zombieLoop)
+                zombieLoop = nil
+            end
+        end
+    end    
+})
+
+-- ボス用の新しい変数とフラグ
+local bossToggleEnabled = false
+local bossHeartbeatConnection = nil
+local originalBossCFrames = {}
+
+local function bossScript()
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+
+    local NPCs = workspace:WaitForChild("NPCs")
+    local Boss = NPCs:WaitForChild("Boss")
+
+    -- オリジナルの位置を保存
+    for _, npc in ipairs(Boss:GetChildren()) do
+        if npc:IsA("Model") and npc:FindFirstChild("HumanoidRootPart") then
+            originalBossCFrames[npc] = npc.HumanoidRootPart.CFrame
+        end
+    end
+
+    local function positionBosses(player)
+        local character = player.Character
+        if not character then return end
+
+        local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+        local forwardVector = humanoidRootPart.CFrame.LookVector
+
+        for _, npc in ipairs(Boss:GetChildren()) do
+            if npc:IsA("Model") and npc:FindFirstChild("HumanoidRootPart") then
+                local targetPosition = humanoidRootPart.Position + forwardVector * 20
+                npc.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
+            end
+        end
+    end
+
+    local function onPlayerAdded(player)
+        player.CharacterAdded:Connect(function(character)
+            if bossToggleEnabled then
+                positionBosses(player)
+            end
+        end)
+    end
+
+    Players.PlayerAdded:Connect(onPlayerAdded)
+
+    -- 新しく追加: ボスが追加されたときの処理
+    Boss.ChildAdded:Connect(function(npc)
+        if bossToggleEnabled and npc:IsA("Model") and npc:FindFirstChild("HumanoidRootPart") then
+            wait(0.3) -- ボスが完全にロードされるまで少し待つ
+            originalBossCFrames[npc] = npc.HumanoidRootPart.CFrame
+            local player = Players.LocalPlayer
+            if player and player.Character then
+                positionBosses(player)
+            end
+        end
+    end)
+
+    bossHeartbeatConnection = RunService.Heartbeat:Connect(function()
+        if not bossToggleEnabled then return end
+        local player = Players.LocalPlayer
+        if player and player.Character then
+            positionBosses(player)
+        end
+    end)
+end
+
+Tab1:AddToggle({
+    Name = "ボス用",
+    Default = false,
+    Callback = function(Value)
+        bossToggleEnabled = Value
+        if Value then
+            bossScript()
+        else
+            if bossHeartbeatConnection then
+                bossHeartbeatConnection:Disconnect()
+                bossHeartbeatConnection = nil
+            end
+            -- ボスを元の位置に戻す
+            local NPCs = workspace:FindFirstChild("NPCs")
+            if NPCs then
+                local Boss = NPCs:FindFirstChild("Boss")
+                if Boss then
+                    for npc, originalCFrame in pairs(originalBossCFrames) do
+                        if npc:IsA("Model") and npc:FindFirstChild("HumanoidRootPart") then
+                            npc.HumanoidRootPart.CFrame = originalCFrame
+                        end
+                    end
+                end
+            end
+            originalBossCFrames = {}
+        end
+    end    
+})
+
+local function CreateHighlight(model)
+    if model and not model:FindFirstChild("Highlight") then
+        local highlight = Instance.new("Highlight")
+        highlight.FillColor = Color3.fromRGB(255, 0, 0)
+        highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+        highlight.Parent = model
+    end
+end
+
+local function RemoveHighlight(model)
+    if model and model:FindFirstChild("Highlight") then
+        model.Highlight:Destroy()
+    end
+end
+
+local burstManESPEnabled = false
+local burstManESPLoop
+
+Tab1:AddToggle({
+    Name = "esp 10 Hour Burst Man",
+    Default = false,
+    Callback = function(Value)
+        burstManESPEnabled = Value
+        if Value then
+            burstManESPLoop = coroutine.create(function()
+                while burstManESPEnabled do
+                    local npcFolder = game.Workspace:FindFirstChild("NPCs")
+                    if npcFolder then
+                        local bossFolder = npcFolder:FindFirstChild("Boss")
+                        if bossFolder then
+                            local burstMan = bossFolder:FindFirstChild("10 Hour Burst Man")
+                            if burstMan then
+                                CreateHighlight(burstMan)
+                            end
+                        end
+                    end
+                    wait(1)
+                end
+            end)
+            coroutine.resume(burstManESPLoop)
+        else
+            if burstManESPLoop and coroutine.status(burstManESPLoop) == "suspended" then
+                coroutine.close(burstManESPLoop)
+            end
+            local npcFolder = game.Workspace:FindFirstChild("NPCs")
+            if npcFolder then
+                local bossFolder = npcFolder:FindFirstChild("Boss")
+                if bossFolder then
+                    local burstMan = bossFolder:FindFirstChild("10 Hour Burst Man")
+                    if burstMan then
+                        RemoveHighlight(burstMan)
+                    end
+                end
+            end
+        end
+    end
+})
+
+-- Separate NPC head size script
+local npcHeadSize = 2 -- Default head size
+local headSizeToggleEnabled = false
+local headSizeLoop = nil
+
+local function resizeNPCHead()
+    local NPCs = workspace:FindFirstChild("NPCs")
+    if not NPCs then
+        NPCs = Instance.new("Folder")
+        NPCs.Name = "NPCs"
+        NPCs.Parent = workspace
+    end
+    
+    local function resizeHead(npc)
+        if not npc:IsA("Model") then return end
+        
+        local head = npc:FindFirstChild("Head")
+        if head and head:IsA("BasePart") then
+            head.Size = Vector3.new(npcHeadSize, npcHeadSize, npcHeadSize)
+            head.Transparency = 0.4
+            head.BrickColor = BrickColor.new("Red")
+            head.Material = Enum.Material.Neon
+            head.CanCollide = false
+        end
+    end
+    
+    local function processNPCs()
+        for _, npc in ipairs(NPCs:GetChildren()) do
+            resizeHead(npc)
+        end
+    end
+    
+    if headSizeToggleEnabled then
+        processNPCs()
+    end
+    
+    NPCs.ChildAdded:Connect(function(npc)
+        if headSizeToggleEnabled then
+            resizeHead(npc)
+        end
+    end)
+    
+    headSizeLoop = coroutine.create(function()
+        while headSizeToggleEnabled do
+            processNPCs()
+            wait(1)
+        end
+    end)
+    coroutine.resume(headSizeLoop)
+end
+
+Tab1:AddTextbox({
+    Name = "Head Size (1~6)",
+    Default = "2",
+    TextDisappear = false,
+    Callback = function(Value)
+        npcHeadSize = tonumber(Value) or 2
+    end
+})
+
+Tab1:AddToggle({
+    Name = "npc hitbox",
+    Default = false,
+    Callback = function(Value)
+        headSizeToggleEnabled = Value
+        if Value then
+            resizeNPCHead()
+        else
+            if headSizeLoop then
+                coroutine.close(headSizeLoop)
+                headSizeLoop = nil
+            end
+        end
+    end
+})
+
+
+-- New tab for fake status
+local FakeStatusTab = Window:MakeTab({
+    Name = "fake status",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local function updateValue(statName, value)
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local player = game:GetService("Players").LocalPlayer
+    local StatsFolder = ReplicatedStorage:FindFirstChild("StatsFolder")
+    local playerFolder = StatsFolder and StatsFolder:FindFirstChild(player.Name)
+    local statValue = playerFolder and playerFolder:FindFirstChild(statName)
+
+    if not (statValue and statValue:IsA("NumberValue")) then
+        warn(statName .. " NumberValueが見つかりません")
+        return
+    end
+
+    statValue.Value = tonumber(value) or 0
+end
+
+local function addTextbox(name)
+    FakeStatusTab:AddTextbox({
+        Name = name,
+        Default = "",
+        TextDisappear = true,
+        Callback = function(Value)
+            updateValue(name, Value)
+        end
+    })
+end
+
+addTextbox("Points")
+addTextbox("TotalPoints")
+addTextbox("TotalKills")
+
+local GUITab = Window:MakeTab({
+    Name = "gui",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local eyepatchEnabled = false
+
+local function updateEyepatchUI()
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayer
+    if player and player.PlayerGui then
+        local eyepatchUI = player.PlayerGui:FindFirstChild("EyepatchUI")
+        if eyepatchUI and eyepatchUI:IsA("ScreenGui") then
+            eyepatchUI.Enabled = not eyepatchEnabled
+        end
+    end
+end
+
+GUITab:AddToggle({
+    Name = "Eyepatch",
+    Default = false,
+    Callback = function(Value)
+        eyepatchEnabled = Value
+        updateEyepatchUI()
+        
+        if Value then
+            -- EyepatchUIが作成されたときに監視する
+            local connection
+            connection = game:GetService("Players").LocalPlayer.PlayerGui.ChildAdded:Connect(function(child)
+                if child.Name == "EyepatchUI" and child:IsA("ScreenGui") then
+                    updateEyepatchUI()
+                    connection:Disconnect()
+                end
+            end)
+        end
+    end
+})
+
+local tenhourburstmanEnabled = false
+
+local function updateTenhourburstmanUI()
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayer
+    if player and player.PlayerGui then
+        local staticCam = player.PlayerGui:FindFirstChild("StaticCam")
+        if staticCam and staticCam:IsA("ScreenGui") then
+            staticCam.Enabled = not tenhourburstmanEnabled
+        end
+    end
+end
+
+GUITab:AddToggle({
+    Name = "10hourburstman",
+    Default = false,
+    Callback = function(Value)
+        tenhourburstmanEnabled = Value
+        updateTenhourburstmanUI()
+        
+        if Value then
+            -- StaticCamが作成されたときに監視する
+            local connection
+            connection = game:GetService("Players").LocalPlayer.PlayerGui.ChildAdded:Connect(function(child)
+                if child.Name == "StaticCam" and child:IsA("ScreenGui") then
+                    updateTenhourburstmanUI()
+                    connection:Disconnect()
+                end
+            end)
+        end
+    end
+})
+
+local emoteTab = Window:MakeTab({
+    Name = "UnobtainablEmote",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+emoteTab:AddLabel("※リスポーンしないとエモートを終了できません")
+
+local activeEmote = nil
+
+local function createEmoteButton(name, emoteScript)
+    emoteTab:AddButton({
+        Name = name,
+        Callback = function()
+            activeEmote = name
+            loadstring(emoteScript)()
+        end
+    })
+end
+
+createEmoteButton("Caramelldansen", [[
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local EmoteRunner = require(ReplicatedStorage.Emotes.Unobtainable.Caramelldansen.EmoteRunner)
+    local player = game.Players.LocalPlayer
+    local function playEmote()
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            EmoteRunner.Activate(player.Character, player.Character:FindFirstChild("Humanoid"))
+        end
+    end
+    playEmote()
+]])
+
+createEmoteButton("Ferb Shuffle", [[
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local EmoteRunner = require(ReplicatedStorage.Emotes.Unobtainable["Ferb Shuffle"].EmoteRunner)
+    local player = game.Players.LocalPlayer
+    local function playEmote()
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            EmoteRunner.Activate(player.Character, player.Character:FindFirstChild("Humanoid"))
+        end
+    end
+    playEmote()
+]])
+
+createEmoteButton("Flashbang Dance", [[
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local EmoteRunner = require(ReplicatedStorage.Emotes.Unobtainable["Flashbang Dance"].EmoteRunner)
+    local player = game.Players.LocalPlayer
+    local function playEmote()
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            EmoteRunner.Activate(player.Character, player.Character:FindFirstChild("Humanoid"))
+        end
+    end
+    playEmote()
+]])
+
+createEmoteButton("Low Tier Roast", [[
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local EmoteRunner = require(ReplicatedStorage.Emotes.Unobtainable["Low Tier Roast"].EmoteRunner)
+    local player = game.Players.LocalPlayer
+    local function playEmote()
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            EmoteRunner.Activate(player.Character, player.Character:FindFirstChild("Humanoid"))
+        end
+    end
+    playEmote()
+]])
+
+createEmoteButton("Monster Mash", [[
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local EmoteRunner = require(ReplicatedStorage.Emotes.Unobtainable["Monster Mash"].EmoteRunner)
+    local player = game.Players.LocalPlayer
+    local function playEmote()
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            EmoteRunner.Activate(player.Character, player.Character:FindFirstChild("Humanoid"))
+        end
+    end
+    playEmote()
+]])
+
+createEmoteButton("Slaying", [[
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local EmoteRunner = require(ReplicatedStorage.Emotes.Unobtainable["Slaying"].EmoteRunner)
+    local player = game.Players.LocalPlayer
+    local function playEmote()
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            EmoteRunner.Activate(player.Character, player.Character:FindFirstChild("Humanoid"))
+        end
+    end
+    playEmote()
+]])
+
+createEmoteButton("Soyboy", [[
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local EmoteRunner = require(ReplicatedStorage.Emotes.Unobtainable["Soyboy"].EmoteRunner)
+    local player = game.Players.LocalPlayer
+    local function playEmote()
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            EmoteRunner.Activate(player.Character, player.Character:FindFirstChild("Humanoid"))
+        end
+    end
+    playEmote()
+]])
+
+createEmoteButton("Stride", [[
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local EmoteRunner = require(ReplicatedStorage.Emotes.Unobtainable["Stride"].EmoteRunner)
+    local player = game.Players.LocalPlayer
+    local function playEmote()
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            EmoteRunner.Activate(player.Character, player.Character:FindFirstChild("Humanoid"))
+        end
+    end
+    playEmote()
+]])
+
+createEmoteButton("Troll", [[
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local EmoteRunner = require(ReplicatedStorage.Emotes.Unobtainable["Troll"].EmoteRunner)
+    local player = game.Players.LocalPlayer
+    local function playEmote()
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            EmoteRunner.Activate(player.Character, player.Character:FindFirstChild("Humanoid"))
+        end
+    end
+    playEmote()
+]])
+
+createEmoteButton("Dont Need You", [[
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local EmoteRunner = require(ReplicatedStorage.Emotes.Unobtainable["Dont Need You"].EmoteRunner)
+    local player = game.Players.LocalPlayer
+    local function playEmote()
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            EmoteRunner.Activate(player.Character, player.Character:FindFirstChild("Humanoid"))
+        end
+    end
+    playEmote()
+]])
+
+createEmoteButton("grnt", [[
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local EmoteRunner = require(ReplicatedStorage.Emotes.Unobtainable["grnt"].EmoteRunner)
+    local player = game.Players.LocalPlayer
+    local function playEmote()
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            EmoteRunner.Activate(player.Character, player.Character:FindFirstChild("Humanoid"))
+        end
+    end
+    playEmote()
+]])
+
+createEmoteButton("Yamero", [[
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local EmoteRunner = require(ReplicatedStorage.Emotes.Unobtainable["Yamero"].EmoteRunner)
+    local player = game.Players.LocalPlayer
+    local function playEmote()
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            EmoteRunner.Activate(player.Character, player.Character:FindFirstChild("Humanoid"))
+        end
+    end
+    playEmote()
+]])
+
+local alertTab = Window:MakeTab({
+    Name = "Alert",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local detectedPlayers = {}
+
+local function CreateHighlight(player)
+    if player.Character and not player.Character:FindFirstChild("Highlight") then
+        local highlight = Instance.new("Highlight")
+        highlight.FillColor = Color3.fromRGB(255, 255, 0)
+        highlight.OutlineColor = Color3.fromRGB(255, 255, 0)
+        highlight.Parent = player.Character
+    end
+end
+
+local function RemoveHighlight(player)
+    if player.Character and player.Character:FindFirstChild("Highlight") then
+        player.Character.Highlight:Destroy()
+    end
+end
+
+local function CreateBillboardGui(player, weapon)
+    local COREGUI = game:GetService("CoreGui")
+    local ESPholder = COREGUI:FindFirstChild(player.Name..'_ESP') or Instance.new("Folder")
+    ESPholder.Name = player.Name..'_ESP'
+    ESPholder.Parent = COREGUI
+
+    if player.Character and player.Character:FindFirstChild('Head') then
+        local BillboardGui = Instance.new("BillboardGui")
+        local TextLabel = Instance.new("TextLabel")
+        BillboardGui.Adornee = player.Character.Head
+        BillboardGui.Name = player.Name
+        BillboardGui.Parent = ESPholder
+        BillboardGui.Size = UDim2.new(0, 200, 0, 50)
+        BillboardGui.StudsOffset = Vector3.new(0, 1, 0)
+        BillboardGui.AlwaysOnTop = true
+        TextLabel.Parent = BillboardGui
+        TextLabel.BackgroundTransparency = 1
+        TextLabel.Position = UDim2.new(0, 0, 0, 0)
+        TextLabel.Size = UDim2.new(1, 0, 1, 0)
+        TextLabel.Font = Enum.Font.SourceSansSemibold
+        TextLabel.TextSize = 14
+        TextLabel.TextColor3 = Color3.new(1, 1, 1)
+        TextLabel.TextStrokeTransparency = 0.3
+        TextLabel.TextWrapped = true
+        TextLabel.Text = player.Name .. ": " .. weapon
+        TextLabel.ZIndex = 10
+    end
+end
+
+local function RemoveBillboardGui(player)
+    local COREGUI = game:GetService("CoreGui")
+    local ESPholder = COREGUI:FindFirstChild(player.Name..'_ESP')
+    if ESPholder then
+        ESPholder:Destroy()
+    end
+end
+
+local function CheckForWeapon(weaponName)
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player ~= game.Players.LocalPlayer and not detectedPlayers[player] then
+            local hasWeapon = false
+            
+            if player:FindFirstChild("Backpack") then
+                for _, item in pairs(player.Backpack:GetChildren()) do
+                    if item:IsA("Tool") and item.Name == weaponName then
+                        hasWeapon = true
+                        break
+                    end
+                end
+            end
+            
+            if hasWeapon then
+                detectedPlayers[player] = true
+                CreateHighlight(player)
+                CreateBillboardGui(player, weaponName)
+                OrionLib:MakeNotification({
+                    Name = weaponName .. " Alert",
+                    Content = player.Name .. " got " .. weaponName .. "!",
+                    Image = "rbxassetid://4483345998",
+                    Time = 5
+                })
+                
+                player.CharacterAdded:Connect(function(char)
+                    RemoveHighlight(player)
+                    RemoveBillboardGui(player)
+                    detectedPlayers[player] = nil
+                end)
+            end
+        end
+    end
+end
+
+local function CreateWeaponToggle(weaponName)
+    local weaponEspEnabled = false
+    local weaponEspLoop
+
+    alertTab:AddToggle({
+        Name = weaponName,
+        Default = false,
+        Callback = function(Value)
+            weaponEspEnabled = Value
+            if Value then
+                weaponEspLoop = game:GetService("RunService").Heartbeat:Connect(function()
+                    CheckForWeapon(weaponName)
+                end)
+            else
+                if weaponEspLoop then
+                    weaponEspLoop:Disconnect()
+                end
+                for _, player in pairs(game.Players:GetPlayers()) do
+                    RemoveHighlight(player)
+                    RemoveBillboardGui(player)
+                end
+                detectedPlayers = {}
+            end
+        end
+    })
+end
+
+CreateWeaponToggle("smile")
+CreateWeaponToggle("chaos saber")
+CreateWeaponToggle("da capo")
+CreateWeaponToggle("the dang")
+CreateWeaponToggle("bobm")
+CreateWeaponToggle("death note")
+CreateWeaponToggle("gender reveal")
+CreateWeaponToggle("vampirism")
+
+OrionLib:Init()
