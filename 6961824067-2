@@ -746,3 +746,92 @@ AntiTab:AddToggle({
         end
     end
 })
+
+local function isDescendantOf(descendant, ancestor)
+    local parent = descendant
+    while parent do
+        if parent == ancestor then
+            return true
+        end
+        parent = parent.Parent
+    end
+    return false
+end
+
+local function blobGrabPlayer(player, blobman)
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local args = {
+            [1] = blobman:FindFirstChild("RightDetector"),
+            [2] = player.Character:FindFirstChild("HumanoidRootPart"),
+            [3] = blobman:FindFirstChild("RightDetector"):FindFirstChild("RightWeld")
+        }
+        blobman:WaitForChild("BlobmanSeatAndOwnerScript"):WaitForChild("CreatureGrab"):FireServer(unpack(args))
+    end
+end
+
+local function runBlobmanGrabber(targetPlayer)
+    local blobman
+    local foundBlobman = false
+
+    for i, v in pairs(game.Workspace:GetDescendants()) do
+        if v.Name == "CreatureBlobman" then
+            if v:FindFirstChild("VehicleSeat") and v.VehicleSeat:FindFirstChild("SeatWeld") and isDescendantOf(v.VehicleSeat.SeatWeld.Part1, localPlayer.Character) then
+                blobman = v
+                foundBlobman = true
+                break
+            end
+        end
+    end
+
+    if not foundBlobman then
+        return
+    end
+
+    if blobman and targetPlayer then
+        blobGrabPlayer(targetPlayer, blobman)
+    end
+end
+
+local BlobmanTab = Window:MakeTab({
+    Name = "Blobman",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local selectedBlobPlayer = nil
+
+local function updateBlobPlayerList()
+    local playerList = {"Select Player"}
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= localPlayer then
+            table.insert(playerList, player.Name)
+        end
+    end
+    return playerList
+end
+
+local blobPlayerDropdown = BlobmanTab:AddDropdown({
+    Name = "Select Player",
+    Default = "Select Player",
+    Options = updateBlobPlayerList(),
+    Callback = function(Value)
+        selectedBlobPlayer = Value ~= "Select Player" and Players:FindFirstChild(Value) or nil
+    end    
+})
+
+Players.PlayerAdded:Connect(function()
+    blobPlayerDropdown:Refresh(updateBlobPlayerList(), true)
+end)
+
+Players.PlayerRemoving:Connect(function()
+    blobPlayerDropdown:Refresh(updateBlobPlayerList(), true)
+end)
+
+BlobmanTab:AddButton({
+    Name = "Bring",
+    Callback = function()
+        if selectedBlobPlayer then
+            runBlobmanGrabber(selectedBlobPlayer)
+        end
+    end
+})
