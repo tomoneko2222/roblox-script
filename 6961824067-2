@@ -248,7 +248,7 @@ local function disableKunai()
     end
 end
 
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/tomoneko2222/roblox-script/refs/heads/main/orion')))()
+local OrionLib = loadstring(game:HttpGet(('https://pastebin.com/raw/q6z4Lpqs')))()
 
 local Window = OrionLib:MakeWindow({Name = "物人用script", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
 
@@ -658,6 +658,49 @@ AntiTab:AddToggle({
     end
 })
 
+local function monitorFireLight()
+    local localPlayer = game.Players.LocalPlayer
+    local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+    while true do
+        local fireLight = humanoidRootPart:FindFirstChild("FireLight")
+        if fireLight then
+            local barrier = workspace.Plots.Plot4.Barrier:GetChildren()[1]
+            local originalSize = barrier.Size
+            local originalCFrame = barrier.CFrame
+
+            barrier.Size = Vector3.new(0.5, 0.5, 0.5)
+            barrier.CFrame = humanoidRootPart.CFrame
+
+            task.wait(1)
+
+            barrier.Size = originalSize
+            barrier.CFrame = originalCFrame
+        end
+        task.wait()
+    end
+end
+
+AntiTab:AddToggle({
+    Name = "Anti-Fire",
+    Default = false,
+    Color = Color3.fromRGB(240, 0, 0),
+    Save = true,
+    Flag = "AntiFire",
+    Callback = function(enabled)
+        if enabled then
+            fireLightCoroutine = coroutine.create(monitorFireLight)
+            coroutine.resume(fireLightCoroutine)
+        else
+            if fireLightCoroutine then
+                coroutine.close(fireLightCoroutine)
+                fireLightCoroutine = nil
+            end
+        end
+    end
+})
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
@@ -832,6 +875,98 @@ BlobmanTab:AddButton({
     Callback = function()
         if selectedBlobPlayer then
             runBlobmanGrabber(selectedBlobPlayer)
+        end
+    end
+})
+
+-- プレイヤーリストを随時更新
+game:GetService("Players").PlayerAdded:Connect(updatePlayerList)
+game:GetService("Players").PlayerRemoving:Connect(updatePlayerList)
+
+local blobalter = 1
+local function blobGrabPlayer(player, blobman)
+    if blobalter == 1 then
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local args = {
+                [1] = blobman:FindFirstChild("LeftDetector"),
+                [2] = player.Character:FindFirstChild("HumanoidRootPart"),
+                [3] = blobman:FindFirstChild("LeftDetector"):FindFirstChild("LeftWeld")
+            }
+            blobman:WaitForChild("BlobmanSeatAndOwnerScript"):WaitForChild("CreatureGrab"):FireServer(unpack(args))
+            blobalter = 2
+        end
+    else
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local args = {
+                [1] = blobman:FindFirstChild("RightDetector"),
+                [2] = player.Character:FindFirstChild("HumanoidRootPart"),
+                [3] = blobman:FindFirstChild("RightDetector"):FindFirstChild("RightWeld")
+            }
+            blobman:WaitForChild("BlobmanSeatAndOwnerScript"):WaitForChild("CreatureGrab"):FireServer(unpack(args))
+            blobalter = 1
+        end
+    end
+end
+
+local blobman1 = BlobmanTab:AddToggle({
+    Name = "Loop Grab All",
+    Color = Color3.fromRGB(240, 0, 0),
+    Default = false,
+    Callback = function(enabled)
+        if enabled then
+            print("Toggle enabled")
+            blobmanCoroutine = coroutine.create(function()
+                local foundBlobman = false
+                for i, v in pairs(game.Workspace:GetDescendants()) do
+                    if v.Name == "CreatureBlobman" then
+                        print("Found CreatureBlobman")
+                        if v:FindFirstChild("VehicleSeat") and v.VehicleSeat:FindFirstChild("SeatWeld") and isDescendantOf(v.VehicleSeat.SeatWeld.Part1, localPlayer.Character) then
+                            print("Mounted on blobman")
+                            blobman = v
+                            foundBlobman = true
+                            break
+                        end
+                    end
+                end
+                print("Out of the loop!")
+
+                if not foundBlobman then
+                    print("No mount found")
+                    OrionLib:MakeNotification({
+                        Name = "Error",
+                        Content = "You must be mounted upon a blobman to begin this process. Please mount one and toggle this again!", 
+                        Image = "rbxassetid://4483345998", 
+                        Time = 5
+                    })
+                    blobman1:Set(false)
+                    blobman = nil
+                    coroutine.close(blobmanCoroutine)
+                    blobmanCoroutine = nil
+                    return
+                end
+
+                while true do
+                    pcall(function()
+                        while wait() do
+                            for i, v in pairs(Players:GetChildren()) do
+                                if blobman and v ~= localPlayer then
+                                    blobGrabPlayer(v, blobman)
+                                    print(v.Name)
+                                    wait(_G.BlobmanDelay)
+                                end
+                            end
+                        end
+                    end)
+                    wait(0.02)
+                end
+            end)
+            coroutine.resume(blobmanCoroutine)
+        else
+            if blobmanCoroutine then
+                coroutine.close(blobmanCoroutine)
+                blobmanCoroutine = nil
+                blobman = nil
+            end
         end
     end
 })
