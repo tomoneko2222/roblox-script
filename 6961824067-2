@@ -248,7 +248,7 @@ local function disableKunai()
     end
 end
 
-local OrionLib = loadstring(game:HttpGet(('https://pastebin.com/raw/q6z4Lpqs')))()
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/tomoneko2222/roblox-script/refs/heads/main/orion')))()
 
 local Window = OrionLib:MakeWindow({Name = "物人用script", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
 
