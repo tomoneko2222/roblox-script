@@ -3,6 +3,8 @@ local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local GrabEvents = ReplicatedStorage:WaitForChild("GrabEvents")
+local SetNetworkOwner = GrabEvents:WaitForChild("SetNetworkOwner")
 
 local toysFolder = ReplicatedStorage:FindFirstChild("ToysFolder") or Instance.new("Folder", ReplicatedStorage)
 toysFolder.Name = "ToysFolder"
@@ -264,7 +266,7 @@ GrabTab:AddSlider({
     Name = "Strength",
     Min = 300,
     Max = 4000,
-    Color = Color3.fromRGB(240, 0, 0),
+    Color = Color3.fromRGB(153, 102, 204),
     ValueName = ".",
     Increment = 1,
     Default = _G.strength,
@@ -278,7 +280,7 @@ GrabTab:AddSlider({
 GrabTab:AddToggle({
     Name = "Strength",
     Default = false,
-    Color = Color3.fromRGB(240, 0, 0),
+    Color = Color3.fromRGB(153, 102, 204),
     Save = true,
     Flag = "StrengthToggle",
     Callback = function(enabled)
@@ -346,7 +348,7 @@ GrabTab:AddToggle({
 GrabTab:AddToggle({
     Name = "Radioactive Grab",
     Default = false,
-    Color = Color3.fromRGB(240, 0, 0),
+    Color = Color3.fromRGB(153, 102, 204),
     Save = true,
     Flag = "RadioactiveGrab",
     Callback = function(enabled)
@@ -369,7 +371,7 @@ GrabTab:AddToggle({
     Name = "Noclip Grab",
     Default = false,
     Save = true,
-    Color = Color3.fromRGB(240, 0, 0),
+    Color = Color3.fromRGB(153, 102, 204),
     Flag = "NoclipGrab",
     Callback = function(enabled)
         if enabled then
@@ -388,7 +390,7 @@ GrabTab:AddToggle({
     Name = "Death Grab",
     Default = false,
     Save = true,
-    Color = Color3.fromRGB(240, 0, 0),
+    Color = Color3.fromRGB(153, 102, 204),
     Flag = "DeathGrab",
     Callback = function(enabled)
         if enabled then
@@ -409,7 +411,7 @@ GrabTab:AddToggle({
     Name = "Spin Grab",
     Default = false,
     Save = true,
-    Color = Color3.fromRGB(240, 0, 0),
+    Color = Color3.fromRGB(153, 102, 204),
     Flag = "SpinGrab",
     Callback = function(enabled)
         if enabled then
@@ -497,7 +499,7 @@ GrabTab:AddToggle({
     Name = "Bring Grab",
     Default = false,
     Save = true,
-    Color = Color3.fromRGB(240, 0, 0),
+    Color = Color3.fromRGB(153, 102, 204),
     Flag = "BringGrab",
     Callback = function(enabled)
         if enabled then
@@ -576,7 +578,7 @@ GrabTab:AddToggle({
     Name = "Bring Grab v2",
     Default = false,
     Save = true,
-    Color = Color3.fromRGB(240, 0, 0),
+    Color = Color3.fromRGB(153, 102, 204),
     Flag = "BringGrabV2",
     Callback = function(enabled)
         if enabled then
@@ -614,7 +616,7 @@ local AntiTab = Window:MakeTab({
 AntiTab:AddToggle({
     Name = "Anti-Explosion",
     Default = false,
-    Color = Color3.fromRGB(240, 0, 0),
+    Color = Color3.fromRGB(153, 102, 204),
     Save = true,
     Flag = "AntiExplosion",
     Callback = function(enabled)
@@ -646,7 +648,7 @@ AntiTab:AddToggle({
 AntiTab:AddToggle({
     Name = "Anti-Grab",
     Default = false,
-    Color = Color3.fromRGB(240, 0, 0),
+    Color = Color3.fromRGB(153, 102, 204),
     Save = true,
     Flag = "AntiGrab",
     Callback = function(enabled)
@@ -685,7 +687,7 @@ end
 AntiTab:AddToggle({
     Name = "Anti-Fire",
     Default = false,
-    Color = Color3.fromRGB(240, 0, 0),
+    Color = Color3.fromRGB(153, 102, 204),
     Save = true,
     Flag = "AntiFire",
     Callback = function(enabled)
@@ -777,7 +779,7 @@ end
 AntiTab:AddToggle({
     Name = "Anti-Kick",
     Default = false,
-    Color = Color3.fromRGB(240, 0, 0),
+    Color = Color3.fromRGB(153, 102, 204),
     Save = true,
     Flag = "AntiKick",
     Callback = function(enabled)
@@ -834,6 +836,24 @@ local function runBlobmanGrabber(targetPlayer)
         blobGrabPlayer(targetPlayer, blobman)
     end
 end
+
+local antivoid = false
+
+AntiTab:AddToggle({
+    Name = "Anti-Void",
+    Default = false,
+    Color = Color3.fromRGB(153, 102, 204),
+    Save = true,
+    Flag = "AntiVoid",
+    Callback = function(enabled)
+        antivoid = enabled
+        if antivoid then
+            workspace.FallenPartsDestroyHeight = -100000000000
+        else
+            workspace.FallenPartsDestroyHeight = -100
+        end
+    end
+})
 
 local BlobmanTab = Window:MakeTab({
     Name = "Blobman",
@@ -910,7 +930,7 @@ end
 
 local blobman1 = BlobmanTab:AddToggle({
     Name = "Loop Grab All",
-    Color = Color3.fromRGB(240, 0, 0),
+    Color = Color3.fromRGB(153, 102, 204),
     Default = false,
     Callback = function(enabled)
         if enabled then
@@ -967,6 +987,217 @@ local blobman1 = BlobmanTab:AddToggle({
                 blobmanCoroutine = nil
                 blobman = nil
             end
+        end
+    end
+})
+
+
+
+local LineTab = Window:MakeTab({
+    Name = "line",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local zgt = false
+local N = { zgv = 0 }
+
+LineTab:AddToggle({
+    Name = "inf line",
+    Default = false,
+    Save = true,
+    Color = Color3.fromRGB(153, 102, 204),
+    Flag = "InfLine",
+    Callback = function(enabled)
+        zgt = enabled
+        if enabled then
+            UserInputService.InputChanged:Connect(function(inp)
+                if inp.UserInputType == Enum.UserInputType.MouseWheel and zgt then
+                    local v1 = workspace:FindFirstChild("GrabParts")
+                    if v1 then
+                        if inp.Position.Z == 1 then
+                            N.zgv = N.zgv + 3
+                        else
+                            N.zgv = N.zgv - 3
+                        end
+                    else
+                        N.zgv = 0
+                    end
+                end
+            end)
+
+            workspace.ChildAdded:Connect(function(f)
+                if f.Name == "GrabParts" and not(kickkk1) and not(kickkk2) then
+                    N.zgv = 0
+                    local da = f.DragPart.DragAttach
+                    while f.Parent and task.wait() do
+                        da.Position = workspace.CurrentCamera.CFrame.LookVector * N.zgv
+                    end
+                end
+            end)
+        end
+    end
+})
+
+local invisline = false
+
+LineTab:AddToggle({
+    Name = "invis line",
+    Default = false,
+    Save = true,
+    Color = Color3.fromRGB(153, 102, 204),
+    Flag = "InvisLine",
+    Callback = function(enabled)
+        invisline = enabled
+        while invisline do
+            ReplicatedStorage.GrabEvents.CreateGrabLine:FireServer()
+            task.wait()
+        end
+    end
+})
+
+local crazyline = false
+
+LineTab:AddToggle({
+    Name = "Crazy line",
+    Default = false,
+    Save = true,
+    Color = Color3.fromRGB(153, 102, 204),
+    Flag = "CrazyLine",
+    Callback = function(enabled)
+        crazyline = enabled
+        while crazyline do
+            for _, plr in ipairs(Players:GetPlayers()) do
+                local character = plr.Character
+                if character then
+                    local torso = character:FindFirstChild("Torso")
+                    if torso then
+                        ReplicatedStorage.GrabEvents.CreateGrabLine:FireServer(torso, torso.CFrame)
+                        task.wait()
+                    end
+                end
+            end
+        end
+    end
+})
+
+local auraRadius = 25
+local grabSpeed = 0
+
+local AuraTab = Window:MakeTab({
+    Name = "Aura",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+AuraTab:AddToggle({
+    Name = "Grab Aura",
+    Color = Color3.fromRGB(153, 102, 204),
+    Default = false,
+    Flag = "FlingAura",
+    Callback = function(enabled)
+        if enabled then
+            auraCoroutine = coroutine.create(function()
+                while true do
+                    local success, err = pcall(function()
+                        local character = localPlayer.Character
+                        if character and character:FindFirstChild("Head") and character:FindFirstChild("HumanoidRootPart") then
+                            local head = character.Head
+                            local humanoidRootPart = character.HumanoidRootPart
+                            for _, player in pairs(Players:GetPlayers()) do
+                                coroutine.wrap(function()
+                                    if player ~= localPlayer and player.Character then
+                                        local playerCharacter = player.Character
+                                        local playerTorso = playerCharacter:FindFirstChild("Torso")
+                                        if playerTorso then
+                                            local distance = (playerTorso.Position - humanoidRootPart.Position).Magnitude
+                                            if distance <= auraRadius then
+                                                SetNetworkOwner:FireServer(playerTorso, playerCharacter.HumanoidRootPart.FirePlayerPart.CFrame)
+                                                task.wait(0.1)
+                                               
+                                            end
+                                        end
+                                    end
+                                end)()
+                            end
+                        end
+                    end)
+                    if not success then
+                        warn("Error in Air Suspend Aura: " .. tostring(err))
+                    end
+                    wait(0)
+                end
+            end)
+            coroutine.resume(auraCoroutine)
+        else
+            if auraCoroutine then
+                coroutine.close(auraCoroutine)
+                auraCoroutine = nil
+            end
+        end
+    end
+})
+
+
+local poisonAuraCoroutine = nil
+local poisonHurtParts = getDescendantParts("PoisonHurtPart")
+AuraTab:AddToggle({
+    Name = "Poison Aura",
+    Default = false,
+    Color = Color3.fromRGB(153, 102, 204),
+    Callback = function(enabled)
+        if enabled then
+            poisonAuraCoroutine = coroutine.create(function()
+                while true do
+                    local success, err = pcall(function()
+                        local character = localPlayer.Character
+                        if character and character:FindFirstChild("HumanoidRootPart") then
+                            local humanoidRootPart = character.HumanoidRootPart
+
+                            for _, player in pairs(Players:GetPlayers()) do
+                                if player ~= localPlayer and player.Character then
+                                    local playerCharacter = player.Character
+                                    local playerTorso = playerCharacter:FindFirstChild("Torso")
+                                    local playerHead = playerCharacter:FindFirstChild("Head")
+
+                                    if playerTorso and playerHead then
+                                        local distance = (playerTorso.Position - humanoidRootPart.Position).Magnitude
+                                        if distance <= auraRadius then
+
+                                            SetNetworkOwner:FireServer(playerTorso, playerCharacter.HumanoidRootPart.CFrame)
+
+                                            for _, part in pairs(poisonHurtParts) do
+                                                part.Size = Vector3.new(1, 3, 1)
+                                                part.Transparency = 1
+                                                part.Position = playerHead.Position
+                                            end
+
+                                            wait(0.1)
+
+                                            for _, part in pairs(poisonHurtParts) do
+                                                part.Position = Vector3.new(0, -200, 0)
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end)
+
+                    if not success then
+                        warn("Error in Poison Aura: " .. tostring(err))
+                    end
+
+                    wait(0.02)
+                end
+            end)
+            coroutine.resume(poisonAuraCoroutine)
+        elseif poisonAuraCoroutine then
+            coroutine.close(poisonAuraCoroutine)
+            for _, part in pairs(poisonHurtParts) do
+                part.Position = Vector3.new(0, -200, 0)
+            end
+            poisonAuraCoroutine = nil
         end
     end
 })
