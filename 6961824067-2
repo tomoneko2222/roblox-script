@@ -1083,7 +1083,7 @@ LineTab:AddToggle({
     end
 })
 
-local auraRadius = 25
+local auraRadius = 30
 local grabSpeed = 0
 
 local AuraTab = Window:MakeTab({
@@ -1250,6 +1250,128 @@ AuraTab:AddToggle({
                 coroutine.close(flingAuraCoroutine)
                 flingAuraCoroutine = nil
             end
+        end
+    end
+})
+
+local tornadoAuraSpeed = 2 * math.pi / 1
+local tornadoAuraRadius = 90
+local tornadoAuraObjects = {}
+
+local function tornadoAuraHandler()
+    while true do
+        local success, err = pcall(function()
+            local character = localPlayer.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                local humanoidRootPart = character.HumanoidRootPart
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= localPlayer and player.Character then
+                        local playerCharacter = player.Character
+                        local playerTorso = playerCharacter:FindFirstChild("Torso")
+                        if playerTorso then
+                            local distance = (playerTorso.Position - humanoidRootPart.Position).Magnitude
+                            if distance <= auraRadius then
+                                SetNetworkOwner:FireServer(playerTorso, playerCharacter.HumanoidRootPart.CFrame)
+                                task.wait(0.1)
+                                local moveData = moveInCircle(playerTorso, humanoidRootPart, tornadoAuraRadius, tornadoAuraSpeed)
+                                table.insert(tornadoAuraObjects, {part = playerTorso, bodyPosition = moveData.bodyPosition, connection = moveData.connection})
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+        if not success then
+            warn("Error in Tornado Aura: " .. tostring(err))
+        end
+        wait(0.1)
+    end
+end
+
+AuraTab:AddToggle({
+    Name = "Tornado Aura",
+    Color = Color3.fromRGB(153, 102, 204),
+    Default = false,
+    Flag = "TornadoAura",
+    Callback = function(enabled)
+        if enabled then
+            tornadoAuraCoroutine = coroutine.create(tornadoAuraHandler)
+            coroutine.resume(tornadoAuraCoroutine)
+        else
+            if tornadoAuraCoroutine then
+                coroutine.close(tornadoAuraCoroutine)
+                tornadoAuraCoroutine = nil
+            end
+            for _, obj in ipairs(tornadoAuraObjects) do
+                if obj.bodyPosition then obj.bodyPosition:Destroy() end
+                if obj.connection then obj.connection:Disconnect() end
+            end
+            tornadoAuraObjects = {}
+        end
+    end
+})
+
+local bringAuraObjects = {}
+
+local function bringAuraHandler()
+    while true do
+        local success, err = pcall(function()
+            local character = localPlayer.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                local humanoidRootPart = character.HumanoidRootPart
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= localPlayer and player.Character then
+                        local playerCharacter = player.Character
+                        local playerTorso = playerCharacter:FindFirstChild("Torso")
+                        if playerTorso then
+                            local distance = (playerTorso.Position - humanoidRootPart.Position).Magnitude
+                            if distance <= auraRadius then
+                                SetNetworkOwner:FireServer(playerTorso, playerCharacter.HumanoidRootPart.CFrame)
+                                task.wait(0.1)
+                                local bodyPosition = Instance.new("BodyPosition")
+                                bodyPosition.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                                bodyPosition.Position = Vector3.new(0, 10, 0)  -- 世界の座標(0, 10, 0)に設定
+                                bodyPosition.Parent = playerTorso
+
+                                local bodyGyro = Instance.new("BodyGyro")
+                                bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+                                bodyGyro.CFrame = CFrame.new(Vector3.new(0, 10, 0), humanoidRootPart.Position)  -- (0, 10, 0)からプレイヤーの方を向く
+                                bodyGyro.Parent = playerTorso
+
+                                table.insert(bringAuraObjects, {part = playerTorso, bodyPosition = bodyPosition, bodyGyro = bodyGyro})
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+        if not success then
+            warn("Error in Bring Aura: " .. tostring(err))
+        end
+        wait(0.1)
+    end
+end
+
+
+AuraTab:AddToggle({
+    Name = "Bring Aura",
+    Color = Color3.fromRGB(153, 102, 204),
+    Default = false,
+    Flag = "BringAura",
+    Callback = function(enabled)
+        if enabled then
+            bringAuraCoroutine = coroutine.create(bringAuraHandler)
+            coroutine.resume(bringAuraCoroutine)
+        else
+            if bringAuraCoroutine then
+                coroutine.close(bringAuraCoroutine)
+                bringAuraCoroutine = nil
+            end
+            for _, obj in ipairs(bringAuraObjects) do
+                if obj.bodyPosition then obj.bodyPosition:Destroy() end
+                if obj.bodyGyro then obj.bodyGyro:Destroy() end
+            end
+            bringAuraObjects = {}
         end
     end
 })
