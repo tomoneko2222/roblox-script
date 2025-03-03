@@ -606,6 +606,8 @@ GrabTab:AddToggle({
     end
 })
 
+
+
 local AntiTab = Window:MakeTab({
     Name = "Anti",
     Icon = "rbxassetid://4483345998",
@@ -1198,6 +1200,56 @@ AuraTab:AddToggle({
                 part.Position = Vector3.new(0, -200, 0)
             end
             poisonAuraCoroutine = nil
+        end
+    end
+})
+
+local function flingAuraHandler()
+    while true do
+        local success, err = pcall(function()
+            local character = localPlayer.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                local humanoidRootPart = character.HumanoidRootPart
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= localPlayer and player.Character then
+                        local playerCharacter = player.Character
+                        local playerTorso = playerCharacter:FindFirstChild("Torso")
+                        if playerTorso then
+                            local distance = (playerTorso.Position - humanoidRootPart.Position).Magnitude
+                            if distance <= auraRadius then
+                                SetNetworkOwner:FireServer(playerTorso, playerCharacter.HumanoidRootPart.CFrame)
+                                task.wait(0.1)
+                                local velocity = playerTorso:FindFirstChild("BodyVelocity") or Instance.new("BodyVelocity", playerTorso)
+                                velocity.Velocity = Vector3.new(0, 10000, 0)
+                                velocity.MaxForce = Vector3.new(0, math.huge, 0)
+                                Debris:AddItem(velocity, 1)
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+        if not success then
+            warn("Error in Fling Aura: " .. tostring(err))
+        end
+        wait(0.1)
+    end
+end
+
+AuraTab:AddToggle({
+    Name = "Fling Aura",
+    Color = Color3.fromRGB(153, 102, 204),
+    Default = false,
+    Flag = "FlingAura",
+    Callback = function(enabled)
+        if enabled then
+            flingAuraCoroutine = coroutine.create(flingAuraHandler)
+            coroutine.resume(flingAuraCoroutine)
+        else
+            if flingAuraCoroutine then
+                coroutine.close(flingAuraCoroutine)
+                flingAuraCoroutine = nil
+            end
         end
     end
 })
