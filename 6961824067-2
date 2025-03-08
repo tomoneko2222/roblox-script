@@ -250,7 +250,7 @@ local function disableKunai()
     end
 end
 
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/tomoneko2222/roblox-script/refs/heads/main/orion')))()
+local OrionLib = loadstring(game:HttpGet(('https://pastebin.com/raw/HeySaAL9')))()
 
 local Window = OrionLib:MakeWindow({Name = "物人用script", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
 
@@ -327,7 +327,7 @@ GrabTab:AddToggle({
     Name = "Poison Grab",
     Default = false,
     Save = true,
-    Color = Color3.fromRGB(240, 0, 0),
+    Color = Color3.fromRGB(153, 102, 204),
     Flag = "PoisonGrab",
     Callback = function(enabled)
         if enabled then
