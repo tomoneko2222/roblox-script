@@ -1,52 +1,64 @@
-local OrionLib = loadstring(game:HttpGet(('https://pastebin.com/raw/HeySaAL9')))()
-
-local Window = OrionLib:MakeWindow({Name = "自治区用script", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
-
-local mainTab = Window:MakeTab({
-    Name = "main",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
 local function autoHoldProximityPrompt(prompt)
     prompt.HoldDuration = 0
 
-    local function holdPrompt()
-        while true do
-            prompt:InputHoldBegin()
-            task.wait()
-            prompt:InputHoldEnd()
-        end
+local function holdPrompt()
+    while true do
+        prompt:InputHoldBegin()
+        task.wait()
+        prompt:InputHoldEnd()
     end
-
-    task.spawn(holdPrompt)
+end
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
+task.spawn(holdPrompt)
 end
 
-mainTab:AddButton({
-    Name = "shopを開く(警察でも可)",
-    Callback = function()
+local SparrLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/javasparrow1/roblox-script/refs/heads/main/ui/sparrows-ui.lua"))()
+
+local Window = SparrLib:CreateWindow({
+    Title = "自治区用script", 
+    Size = UDim2.new(0, 400, 0, 300)
+})
+
+local MainTab = Window:CreateTab("Main")
+local PTab = Window:CreateTab("Player")
+local CarTab = Window:CreateTab("Car")
+
+local MainSection = MainTab:AddSection("Main")
+local PSection = PTab:AddSection("player")
+local NCSection = CarTab:AddSection("普通車両")
+local PCSection = CarTab:AddSection("警察車両")
+
+local aButton = MainSection:AddButton("shopを開く(警察でも可)", function()
         local player = game.Players.LocalPlayer
         local shopGui = player:WaitForChild("PlayerGui"):WaitForChild("ShopGuis"):WaitForChild("WeaponShopGui")
         shopGui.Visible = true
-    end
-})
+end)
 
-mainTab:AddLabel("弾数変更は一発撃って、バックパックに戻してから変更してください。")
+local aLabel = MainSection:AddLabel("弾数無限は一発撃って、バックパックに戻してから変更してください。")
 
-local ammoInput = mainTab:AddTextbox({
-    Name = "弾数",
-    Default = "",
-    TextDisappear = false,
-    Callback = function(value)
-        ammoValue = tonumber(value)
-    end
-})
-
-mainTab:AddButton({
-    Name = "弾数を変更",
-    Callback = function()
+local aButton = MainSection:AddButton("弾数無限", function()
         local player = game.Players.LocalPlayer
         local backpack = player:WaitForChild("Backpack")
+
         for _, tool in ipairs(backpack:GetChildren()) do
             if tool:IsA("Tool") then
                 local repValues = tool:FindFirstChild("RepValues")
@@ -54,58 +66,16 @@ mainTab:AddButton({
                     local mag = repValues:FindFirstChild("Mag")
                     local storedAmmo = repValues:FindFirstChild("StoredAmmo")
                     if mag and mag:IsA("IntValue") and storedAmmo and storedAmmo:IsA("IntValue") then
-                        mag.Value = ammoValue
-                        storedAmmo.Value = ammoValue
+                        mag.Value = 999999999
+                        storedAmmo.Value = 999999999
                     end
                 end
             end
         end
-    end
-})
-
-local autoCoinEnabled = false
-
-mainTab:AddToggle({
-    Name = "auto coin(dag coin工場でオンにしてください)",
-    Default = false,
-    Callback = function(value)
-        autoCoinEnabled = value
-        if autoCoinEnabled then
-            while autoCoinEnabled do
-                for _, coin in ipairs(workspace:GetChildren()) do
-                    if coin:IsA("Part") and coin.Name == "Coin" then
-                        local clickDetector = coin:FindFirstChild("ClickDetector")
-                        if clickDetector then
-                            fireclickdetector(clickDetector)
-                        end
-                    end
-                end
-                for _, model in ipairs(workspace:GetChildren()) do
-                    if model:IsA("Model") and model.Name == "Model" then
-                        local dagCoinMachine = model:FindFirstChild("DagCoinProducingMachine")
-                        if dagCoinMachine and dagCoinMachine:IsA("Model") then
-                            local wedge = dagCoinMachine:FindFirstChild("Wedge")
-                            if wedge and wedge:IsA("WedgePart") then
-                                local proximityPrompt = wedge:FindFirstChild("ProximityPrompt")
-                                if proximityPrompt then
-                                    fireproximityprompt(proximityPrompt)
-                                end
-                            end
-                        end
-                    end
-                end
-                wait(1)
-            end
-        end
-    end
-})
+end)
 
 local smugglerEspEnabled = false
-
-mainTab:AddToggle({
-    Name = "密売人esp",
-    Default = false,
-    Callback = function(value)
+local aToggle = MainSection:AddToggle("密売人esp", false, function(value)
         smugglerEspEnabled = value
         local smugglersFolder = workspace:FindFirstChild("Smugglers")
         if smugglersFolder then
@@ -114,7 +84,7 @@ mainTab:AddToggle({
                     if smugglerEspEnabled then
                         local highlight = Instance.new("Highlight")
                         highlight.Adornee = smuggler
-                        highlight.FillColor = Color3.new(1, 1, 0) -- 黄色
+                        highlight.FillColor = Color3.new(1, 1, 0)
                         highlight.Parent = smuggler
                     else
                         local highlight = smuggler:FindFirstChildOfClass("Highlight")
@@ -125,12 +95,9 @@ mainTab:AddToggle({
                 end
             end
         end
-    end
-})
+end)
 
-mainTab:AddButton({
-    Name = "密売人をすべて逮捕する【警察限定】",
-    Callback = function()
+local aButton = MainSection:AddButton("密売人をすべて逮捕する【警察限定】", function()
         local player = game.Players.LocalPlayer
         local originalPosition = player.Character.HumanoidRootPart.Position
         local smugglersFolder = workspace:FindFirstChild("Smugglers")
@@ -147,58 +114,9 @@ mainTab:AddButton({
             end
         end
         player.Character:SetPrimaryPartCFrame(CFrame.new(originalPosition))
-    end
-})
+end)
 
-local hitboxEnabled = false
-local hitboxSize = 5
-
-local function updateHitboxes()
-    if hitboxEnabled then
-        for _, v in next, game:GetService('Players'):GetPlayers() do
-            if v.Name ~= game:GetService('Players').LocalPlayer.Name then
-                pcall(function()
-                    v.Character.Head.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
-                    v.Character.Head.Transparency = 0.4
-                    v.Character.Head.BrickColor = BrickColor.new("Red")
-                    v.Character.Head.Material = "Neon"
-                    v.Character.Head.CanCollide = false
-                    v.Character.Head.Massless = true
-                end)
-            end
-        end
-    end
-end
-
-mainTab:AddTextbox({
-    Name = "Hitbox Size",
-    Default = tostring(hitboxSize),
-    TextDisappear = false,
-    Callback = function(Value)
-        local size = tonumber(Value)
-        if size then
-            hitboxSize = size
-            if hitboxEnabled then
-                updateHitboxes()
-            end
-        end
-    end
-})
-
-mainTab:AddToggle({
-    Name = "Hitbox",
-    Default = false,
-    Callback = function(Value)
-        hitboxEnabled = Value
-        if Value then
-            game:GetService('RunService').RenderStepped:Connect(updateHitboxes)
-        end
-    end
-})
-
-mainTab:AddButton({
-    Name = "rejoin",
-    Callback = function()
+local aButton = MainSection:AddButton("rejoin", function()
         local Players = game:GetService("Players")
         local TeleportService = game:GetService("TeleportService")
         local PlaceId = game.PlaceId
@@ -211,202 +129,54 @@ mainTab:AddButton({
         else
             TeleportService:TeleportToPlaceInstance(PlaceId, JobId, Players.LocalPlayer)
         end
-    end
-})
-
-local bringTab = Window:MakeTab({
-    Name = "bring",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
-local playerBringToggleEnabled = false
-local playerBringLoop = nil
-local excludeFriends = false
-
-local function playerBringScript()
-    local Players = game:GetService("Players")
-    local RunService = game:GetService("RunService")
-
-    local DISTANCE_FROM_PLAYER = 20
-
-    local function getPlayerCharacter(player)
-        return player and player.Character
-    end
-
-    local function updatePlayerPosition(player)
-        local localPlayer = Players.LocalPlayer
-        if localPlayer == player then return end
-        if excludeFriends and localPlayer:IsFriendsWith(player.UserId) then return end
-
-        local localCharacter = getPlayerCharacter(localPlayer)
-        local playerCharacter = getPlayerCharacter(player)
-
-        if localCharacter and localCharacter:FindFirstChild("HumanoidRootPart") and playerCharacter and playerCharacter:FindFirstChild("HumanoidRootPart") then
-            local forwardVector = localCharacter.HumanoidRootPart.CFrame.LookVector
-            local targetPosition = localCharacter.HumanoidRootPart.Position + forwardVector * DISTANCE_FROM_PLAYER
-
-            playerCharacter.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
-        end
-    end
-
-    playerBringLoop = coroutine.create(function()
-        while playerBringToggleEnabled do
-            for _, player in ipairs(Players:GetPlayers()) do
-                updatePlayerPosition(player)
-            end
-            wait(0.1)
-        end
-    end)
-    coroutine.resume(playerBringLoop)
-end
-
-bringTab:AddToggle({
-    Name = "Player Bring (all)",
-    Default = false,
-    Callback = function(Value)
-        playerBringToggleEnabled = Value
-        if Value then
-            playerBringScript()
-        else
-            if playerBringLoop and coroutine.status(playerBringLoop) == "suspended" then
-                coroutine.close(playerBringLoop)
-                playerBringLoop = nil
-            end
-        end
-    end
-})
-
-local playerBringToggleEnabled_tc_tdm_zs = false
-local playerBringLoop_tc_tdm_zs = nil
-
-local function playerBringScript_tc_tdm_zs()
-    local Players = game:GetService("Players")
-    local RunService = game:GetService("RunService")
-
-    local DISTANCE_FROM_PLAYER = 20
-
-    local function getPlayerCharacter(player)
-        return player and player.Character
-    end
-
-    local function updatePlayerPosition(player)
-        local localPlayer = Players.LocalPlayer
-        if localPlayer == player then return end
-        if excludeFriends and localPlayer:IsFriendsWith(player.UserId) then return end
-
-        local localCharacter = getPlayerCharacter(localPlayer)
-        local playerCharacter = getPlayerCharacter(player)
-
-        if localCharacter and localCharacter:FindFirstChild("HumanoidRootPart") and playerCharacter and playerCharacter:FindFirstChild("HumanoidRootPart") then
-            local forwardVector = localCharacter.HumanoidRootPart.CFrame.LookVector
-            local targetPosition = localCharacter.HumanoidRootPart.Position + forwardVector * DISTANCE_FROM_PLAYER
-
-            if localPlayer.Team ~= player.Team then
-                playerCharacter.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
-            end
-        end
-    end
-
-    playerBringLoop_tc_tdm_zs = coroutine.create(function()
-        while playerBringToggleEnabled_tc_tdm_zs do
-            for _, player in ipairs(Players:GetPlayers()) do
-                updatePlayerPosition(player)
-            end
-            wait(0.1)
-        end
-    end)
-    coroutine.resume(playerBringLoop_tc_tdm_zs)
-end
-
-bringTab:AddToggle({
-    Name = "Player Bring (自分がいるチーム以外)",
-    Default = false,
-    Callback = function(Value)
-        playerBringToggleEnabled_tc_tdm_zs = Value
-        if Value then
-            playerBringScript_tc_tdm_zs()
-        else
-            if playerBringLoop_tc_tdm_zs and coroutine.status(playerBringLoop_tc_tdm_zs) == "suspended" then
-                coroutine.close(playerBringLoop_tc_tdm_zs)
-                playerBringLoop_tc_tdm_zs = nil
-            end
-        end
-    end
-})
-
-local selectedPlayer = nil
-local onePlayerBringEnabled = false
-local onePlayerBringLoop = nil
-
-local function updatePlayerList()
-    local playerList = {"None"}
-    for _, player in ipairs(game.Players:GetPlayers()) do
-        if player ~= game.Players.LocalPlayer then
-            table.insert(playerList, player.Name)
-        end
-    end
-    return playerList
-end
-
-local playerDropdown = bringTab:AddDropdown({
-    Name = "1player bring",
-    Default = "None",
-    Options = updatePlayerList(),
-    Callback = function(Value)
-        selectedPlayer = Value ~= "None" and game.Players:FindFirstChild(Value) or nil
-    end
-})
-
-local function updateOnePlayerPosition()
-    if not selectedPlayer then return end
-    if excludeFriends and game.Players.LocalPlayer:IsFriendsWith(selectedPlayer.UserId) then return end
-
-    local localPlayer = game.Players.LocalPlayer
-    local localCharacter = localPlayer.Character
-    local playerCharacter = selectedPlayer.Character
-
-    if localCharacter and localCharacter:FindFirstChild("HumanoidRootPart") and playerCharacter and playerCharacter:FindFirstChild("HumanoidRootPart") then
-        local forwardVector = localCharacter.HumanoidRootPart.CFrame.LookVector
-        local targetPosition = localCharacter.HumanoidRootPart.Position + forwardVector * 20
-
-        playerCharacter.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
-    end
-end
-
-bringTab:AddToggle({
-    Name = "1player bring",
-    Default = false,
-    Callback = function(Value)
-        onePlayerBringEnabled = Value
-        if Value then
-            onePlayerBringLoop = coroutine.create(function()
-                while onePlayerBringEnabled do
-                    updateOnePlayerPosition()
-                    wait(0.1)
-                end
-            end)
-            coroutine.resume(onePlayerBringLoop)
-        else
-            if onePlayerBringLoop and coroutine.status(onePlayerBringLoop) == "suspended" then
-                coroutine.close(onePlayerBringLoop)
-                onePlayerBringLoop = nil
-            end
-        end
-    end
-})
-
-spawn(function()
-    while wait(5) do
-        playerDropdown:Refresh(updatePlayerList(), true)
-    end
 end)
 
-bringTab:AddToggle({
-    Name = "Exclude Friends",
-    Default = false,
-    Callback = function(Value)
-        excludeFriends = Value
-    end
-})
+local aLabel = PSection:AddLabel("実装予定")
 
+local aButton = NCSection:AddButton("フェラーリ エンツォ", function()
+        local args = {
+            [1] = "\227\131\149\227\130\167\227\131\169\227\131\188\227\131\170 \227\130\168\227\131\179\227\131\132\227\130\169",
+            [2] = false
+        }
+        game:GetService("ReplicatedStorage").CarSpawningEvent:FireServer(unpack(args))
+end)
+
+local aButton = NCSection:AddButton("ハマーH3", function()
+        local args = {
+            [1] = "\227\131\143\227\131\158\227\131\188H3",
+            [2] = false
+        }
+        game:GetService("ReplicatedStorage").CarSpawningEvent:FireServer(unpack(args))
+end)
+
+local aButton = NCSection:AddButton("ハーレー・ダビットソン ナイトロッド", function()
+        local args = {
+            [1] = "\227\131\143\227\131\188\227\131\172\227\131\188\227\131\187\227\131\128\227\131\147\227\131\131\227\131\136\227\130\189\227\131\179 \227\131\138\227\130\164\227\131\136\227\131\173\227\131\131\227\131\137",
+            [2] = false
+        }
+        game:GetService("ReplicatedStorage").CarSpawningEvent:FireServer(unpack(args))
+end)
+
+local aButton = NCSection:AddButton("カワサキ GPZ900R", function()
+        local args = {
+            [1] = "\227\130\171\227\131\175\227\130\181\227\130\173 GPZ900R",
+            [2] = false
+        }
+        game:GetService("ReplicatedStorage").CarSpawningEvent:FireServer(unpack(args))
+end)
+
+local aButton = PCSection:AddButton("クラウン210(警察車両)", function()
+        local args = {
+            [1] = "\227\130\175\227\131\169\227\130\166\227\131\179210(\232\173\166\229\175\159\232\187\138\228\184\161)",
+            [2] = false
+        }
+        game:GetService("ReplicatedStorage").CarSpawningEvent:FireServer(unpack(args))
+end)
+
+local aButton = PCSection:AddButton("トヨタ ハイエース(警察車両)", function()
+        local args = {
+            [1] = "\227\131\136\227\131\168\227\130\191 \227\131\143\227\130\164\227\130\168\227\131\188\227\130\185(\232\173\166\229\175\159\232\187\138\228\184\161)",
+            [2] = false
+        }
+        game:GetService("ReplicatedStorage").CarSpawningEvent:FireServer(unpack(args))
+end)
